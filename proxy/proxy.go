@@ -21,9 +21,15 @@ var proxyPort = 5555
 func main() {
 
 	for i, arg := range os.Args{
+		if i == 0{
+			continue
+		}
+		fmt.Println(arg)
+		mapOfServerIdAndPort[i-1] = arg
+	}
 
-		mapOfServerIdAndPort[i] = arg
-
+	for i := 0; i<= len(mapOfServerIdAndPort); i++ {
+		fmt.Println(mapOfServerIdAndPort[i])
 	}
 
 	http.HandleFunc("/", proxyHandler)
@@ -40,8 +46,7 @@ func proxyHandler(w http.ResponseWriter, r *http.Request){
 	if endPoint == "/set"{
 		assignSetNode(w, r)
 	}else if endPoint == "/get"{
-		//assignGetNode(w, r)
-		assignSetNode( w, r )
+		assignGetNode( w, r )
 	}
 }
 
@@ -66,7 +71,7 @@ func assignSetNode(w http.ResponseWriter, r *http.Request){
 	log.Println("[INFO] [PROXY] asciiSumOfShaSum=", asciiSumOfShaSum, " and therefore, serverId: ", serverId,
 		"\nand therefore, mapOfServerIdAndPort[serverId]: " + mapOfServerIdAndPort[serverId]);
 	serverToQuery += "/set"
-	log.Println("[INFO] [PROXY] serverToQuery=", serverToQuery);
+	log.Println("[INFO] [PROXY] serverToQuery=", serverToQuery)
 
 	b, _ := json.Marshal(request)
 	log.Println(string(b))
@@ -112,24 +117,41 @@ func assignGetNode(w http.ResponseWriter, r *http.Request){
 
 	shaSumOfKey := getKeyForValue([]byte(request.Key))
 	asciiSumOfShaSum := getAsciiSumOfIndividualCharactersInString(shaSumOfKey)
-	log.Println("[INFO] [PROXY] asciiSumOfShaSum=", asciiSumOfShaSum);
 	serverId := asciiSumOfShaSum % numberOfServers
 	serverToQuery := server + ":" + mapOfServerIdAndPort[serverId]
-	log.Println("[INFO] [PROXY] serverToQuery=", serverToQuery);
-	relayedResponse, _ := http.Post(serverToQuery, "application/json", r.Body)
-	_ = relayedResponse
+	log.Println("[INFO] [PROXY] asciiSumOfShaSum=", asciiSumOfShaSum, " and therefore, serverId: ", serverId,
+		"\nand therefore, mapOfServerIdAndPort[serverId]: " + mapOfServerIdAndPort[serverId]);
+	serverToQuery += "/get"
+	log.Println("[INFO] [PROXY] serverToQuery=", serverToQuery)
+
+	b, _ := json.Marshal(request)
+	log.Println(string(b))
+
+	relayedResponse, err := http.Post(serverToQuery, "application/json", bytes.NewReader( b ) )
+
+	if err != nil {
+		http.Error(w, "[ERROR] [PROXY] Bad request. Did not get response from server for /set", http.StatusBadRequest)
+		return
+	}
+
 
 	//decode and parse the relayed response
 	//TODO: find better way to simply relay the message
-	var keyValuePair setRequestOnNode
+	var keyValuePair getResponse
 	decoder = json.NewDecoder(relayedResponse.Body)
-	relayedJson := decoder.Decode(&keyValuePair)
+	err = decoder.Decode(&keyValuePair)
 
-	log.Println("[INFO] [PROXY] response to relay...")
+	if err != nil {
+		http.Error(w, "[ERROR] [PROXY] Bad request. Err decoding relay on /set", http.StatusBadRequest)
+		return
+	}
 
-	w.Header().Add("contentType", "application/json")
+	log.Println("[INFO] [PROXY] response to relay...ooo : ", keyValuePair.Value)
+
+	//w.Header().Add("contentType", "application/json")
 	encoder := json.NewEncoder(w)
-	encoder.Encode(relayedJson)
+
+	encoder.Encode(keyValuePair)
 
 }
 

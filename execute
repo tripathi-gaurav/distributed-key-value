@@ -1,0 +1,8 @@
+go run server/node.go 8080
+go run server/node.go 8081
+go run proxy/proxy.go 8080 8081
+curl -v -H "Content-Type: application/json" -X PUT -d '{ "key": "cs 5600", "value" : "systems" }' http://localhost:5555/set
+curl -v -H "Content-Type: application/json" -X PUT -d '{ "key": "cs 6740", "value": "netsec" }' http://localhost:5555/set
+curl -v -H "Content-Type: application/json" -X PUT -d '{ "key": "cs 5800", "value": "algos" }' http://localhost:5555/set
+curl -v -H "Content-Type: application/json" -X PUT -d '{ "key": "cs 6740" }' http://localhost:5555/get
+curl -v -H "Content-Type: application/json" -X PUT -d '{ "key": "cs 5600" }' http://localhost:5555/get

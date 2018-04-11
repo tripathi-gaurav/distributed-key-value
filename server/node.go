@@ -7,10 +7,12 @@ import (
 	"encoding/json"
 	"encoding/base64"
 	"crypto/sha1"
+	"os"
+	"strconv"
 )
 
 var key_value_store = make(map[string]string)
-var port = 8081
+var port = 8080
 var selfNode = "127.0.0.1" + string(port)
 var selfNodeInByteArray = []byte(selfNode)
 var nodeId = getKeyForValue(selfNodeInByteArray)
@@ -21,6 +23,7 @@ func main() {
 	http.HandleFunc("/get", getKeyValueHandlerOnNode)
 	http.HandleFunc("/set", setKeyValueHandlerOnNode)
 	log.Println(nodeId)
+	port, _	 := strconv.ParseInt(os.Args[1], 10, 64)
 	log.Printf("[INFO] Node listening for /get and /set requests on port: %v and its type is %T\n", port, port)
 	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%v", port), nil))
 

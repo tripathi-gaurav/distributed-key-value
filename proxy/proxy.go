@@ -8,6 +8,7 @@ import (
 	"crypto/sha1"
 	"encoding/base64"
 	"bytes"
+	"os"
 )
 
 var mapOfKeyToServer = make(map[string]string)
@@ -18,8 +19,12 @@ var mapOfServerIdAndPort = make(map[int]string)
 var proxyPort = 5555
 
 func main() {
-	mapOfServerIdAndPort[0] = "8080"
-	mapOfServerIdAndPort[1] = "8081"
+
+	for i, arg := range os.Args{
+
+		mapOfServerIdAndPort[i] = arg
+
+	}
 
 	http.HandleFunc("/", proxyHandler)
 	log.Printf("[INFO] Proxy listening for /get and /set requests on port: %v and its type is %T\n", proxyPort, proxyPort)
@@ -125,7 +130,6 @@ func assignGetNode(w http.ResponseWriter, r *http.Request){
 	w.Header().Add("contentType", "application/json")
 	encoder := json.NewEncoder(w)
 	encoder.Encode(relayedJson)
-
 
 }
 

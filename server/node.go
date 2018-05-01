@@ -113,12 +113,6 @@ func setKeyValueHandlerOnNode(w http.ResponseWriter, r *http.Request){
 type setKeyValueReponseOnNode struct {
 	// change the output field to be "message"
 	Message string `json:"message"`
-	// do not output this field
-	Author string `json:"-"`
-	// do not output the field if the value is empty
-	Date string `json: ",omitempty"`
-	//Convert the output to string and rename to "id"
-	Id int `json:"id, string"`
 }
 
 
